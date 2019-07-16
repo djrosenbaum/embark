@@ -85,16 +85,7 @@ class CodeGenerator {
     });
 
     this.events.setCommandHandler('code-generator:symlink:generate', (...args) => {
-      this.logger.warn(__("'code-generator:symlink:generate' has been deprecated in favor of 'code-generator:artifact:symlink:generate' and will deprecated in the next version"));
-      this.generateArtifactSymlink(...args);
-    });
-
-    this.events.setCommandHandler('code-generator:artifact:symlink:generate', (...args) => {
-      this.generateArtifactSymlink(...args);
-    });
-
-    this.events.setCommandHandler('code-generator:dapp:symlink:generate', (...args) => {
-      this.generateDappSymlink(...args);
+      this.generateSymlink(...args);
     });
 
     this.events.setCommandHandler("code-generator:embarkjs:build", (cb) => {
@@ -342,8 +333,8 @@ class CodeGenerator {
           next(null, location);
         });
       },
-      function generateArtifactSymlink(location, next) {
-        self.generateArtifactSymlink(location, 'embarkjs', (err, symlinkDest) => {
+      function generateSymlink(location, next) {
+        self.generateSymlink(location, 'embarkjs', (err, symlinkDest) => {
           if (err) {
             self.logger.error(__('Error creating a symlink to EmbarkJS'));
             return next(err);
@@ -362,7 +353,7 @@ class CodeGenerator {
               return next(err);
             }
 
-            self.generateArtifactSymlink(location, `embarkjs-${dep}`, (err, _symlinkDest) => {
+            self.generateSymlink(location, `embarkjs-${dep}`, (err, _symlinkDest) => {
               if (err) {
                 self.logger.error(__(`Error creating a symlink to embarkjs-${dep}`));
                 return next(err);
@@ -474,20 +465,11 @@ class CodeGenerator {
     });
   }
 
-  generateDappSymlink(path, target, name, callback) {
-    const symlinkDir = dappPath(path);
-    this.generateSymlink(symlinkDir, target,name, callback);
-  }
-  
-  generateArtifactSymlink(target, name, callback) {
-    const symlinkDir = dappPath(this.embarkConfig.generationDir, constants.dappArtifacts.symlinkDir);
-    this.generateSymlink(symlinkDir, target,name, callback);
-  }
-
-  generateSymlink(symlinkDir, target, name, callback) {
+  generateSymlink(target, name, callback) {
     async.waterfall([
       // Make directory
       next => {
+        const symlinkDir = dappPath(this.embarkConfig.generationDir, constants.dappArtifacts.symlinkDir);
         fs.mkdirp(symlinkDir, (err) => {
           if (err) {
             return next(err);
